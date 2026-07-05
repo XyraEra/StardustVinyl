@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Stardust — 33⅓ RPM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --void:#0a0e1c;
+    --void-deep:#060811;
+    --nebula:#141b35;
+    --nebula-2:#1c2748;
+    --star-gold:#e8c77e;
+    --star-gold-dim:#a9854f;
+    --comet-cream:#f3ecd9;
+    --dust-rose:#c97c6d;
+    --saturn-teal:#6fa8a0;
+    --ink-muted: rgba(243,236,217,0.56);
+    --ink-faint: rgba(243,236,217,0.32);
+    --ring: 0 0 0 3px rgba(232,199,126,0.35);
+  }
+
+  *{ box-sizing: border-box; }
+
+  html,body{
+    margin:0; padding:0;
+    background: radial-gradient(120% 120% at 50% 0%, var(--nebula) 0%, var(--void) 46%, var(--void-deep) 100%);
+    color: var(--comet-cream);
+    font-family: 'Space Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .stage{
+    position: relative;
+    min-height: 100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px 18px 32px;
+    isolation: isolate;
+  }
+
+  .bg-stars{
+    position:absolute; inset:0;
+    overflow:hidden;
+    z-index:0;
+    pointer-events:none;
+  }
+  .bg-star{
+    position:absolute;
+    border-radius:50%;
+    background: var(--comet-cream);
+    opacity:.5;
+    animation: bgtwinkle 4.5s ease-in-out infinite;
+  }
+  @keyframes bgtwinkle{
+    0%,100%{ opacity:.15; }
+    50%{ opacity:.85; }
+  }
+
+  .glow{
+    position:absolute;
+    border-radius:50%;
+    filter: blur(60px);
+    z-index:0;
+    pointer-events:none;
+  }
+  .glow-a{
+    width: 46vmax; height: 46vmax;
+    left: -14vmax; top: -10vmax;
+    background: radial-gradient(circle, rgba(201,124,109,0.16), transparent 70%);
+  }
+  .glow-b{
+    width: 50vmax; height: 50vmax;
+    right: -18vmax; bottom: -16vmax;
+    background: radial-gradient(circle, rgba(111,168,160,0.14), transparent 70%);
+  }
+
+  .player{
+    position:relative;
+    z-index:1;
+    width:min(94vw, 560px);
+    background: linear-gradient(180deg, rgba(28,39,72,0.6), rgba(20,27,53,0.55));
+    border: 1px solid rgba(232,199,126,0.16);
+    border-radius: 28px;
+    padding: 30px clamp(16px, 4vw, 34px) 26px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .player-head{
+    text-align:center;
+    margin-bottom: 6px;
+  }
+  .eyebrow{
+    margin:0 0 6px;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--star-gold-dim);
+  }
+  .title{
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: clamp(34px, 7vw, 46px);
+    letter-spacing: 0.03em;
+    margin: 0 0 8px;
+    color: var(--comet-cream);
+    text-shadow: 0 0 30px rgba(232,199,126,0.18);
+  }
+  .instructions{
+    margin: 0 auto;
+    max-width: 380px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink-muted);
+  }
+
+  .deck-wrap{
+    position:relative;
+    margin: 18px auto 8px;
+    width: 100%;
+  }
+  svg.deck{
+    display:block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  #tonearm{ cursor: grab; touch-action: none; }
+  #tonearm:active{ cursor: grabbing; }
+  #tonearm:focus{ outline:none; }
+  #tonearm:focus-visible .pivot-ring{
+    stroke: var(--comet-cream);
+    stroke-width: 2.5;
+  }
+
+  .controls{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .volume-control{
+    display:flex;
+    align-items:center;
+    gap: 10px;
+    flex: 1 1 200px;
+    min-width: 160px;
+  }
+  .icon-speaker{ flex:0 0 auto; opacity:.75; }
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--star-gold) 0%, var(--star-gold) var(--fill,60%), rgba(255,255,255,0.12) var(--fill,60%), rgba(255,255,255,0.12) 100%);
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width: 16px; height:16px;
+    border-radius:50%;
+    background: var(--comet-cream);
+    box-shadow: 0 0 0 4px rgba(232,199,126,0.25), 0 2px 6px rgba(0,0,0,0.4);
+    cursor:pointer;
+    border: none;
+    margin-top: 0px;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width: 16px; height:16px;
+    border-radius:50%;
+    background: var(--comet-cream);
+    box-shadow: 0 0 0 4px rgba(232,199,126,0.25), 0 2px 6px rgba(0,0,0,0.4);
+    cursor:pointer;
+    border: none;
+  }
+  input[type="range"]::-moz-range-track{
+    height:4px; border-radius:2px; background: rgba(255,255,255,0.12);
+  }
+  input[type="range"]:focus-visible::-webkit-slider-thumb{ box-shadow: var(--ring); }
+
+  .sky-stat{
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    display:flex;
+    align-items:center;
+    gap: 10px;
+  }
+  #starCount{ color: var(--star-gold); font-weight:700; }
+
+  .link-btn{
+    background:none;
+    border:none;
+    padding:0;
+    color: var(--saturn-teal);
+    font-family: inherit;
+    font-size: 11.5px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor:pointer;
+  }
+  .link-btn:hover{ color: var(--comet-cream); }
+  .link-btn:focus-visible{ outline: 2px solid var(--star-gold); outline-offset: 2px; border-radius:3px; }
+
+  .skyfull-msg{
+    margin: 12px 0 0;
+    text-align:center;
+    font-size: 11.5px;
+    color: var(--dust-rose);
+    letter-spacing: 0.02em;
+  }
+  .skyfull-msg button{
+    background:none; border:none; padding:0; margin:0;
+    color: var(--comet-cream);
+    text-decoration: underline;
+    font-family: inherit;
+    font-size: inherit;
+    cursor: pointer;
+  }
+
+  .now-playing{
+    margin: 14px 0 0;
+    text-align:center;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    min-height: 14px;
+    text-transform: uppercase;
+  }
+  .now-playing.on{ color: var(--star-gold-dim); }
+
+  .credit{
+    margin: 18px 0 0;
+    text-align:center;
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+  .credit a{ color: inherit; }
+
+  .decor-enter{
+    animation: decorPop .5s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  @keyframes decorPop{
+    0%{ transform: scale(0); opacity:0; }
+    60%{ transform: scale(1.15); opacity:1; }
+    100%{ transform: scale(var(--s,1)); opacity:1; }
+  }
+  .decor-star{ animation: starPulse 3.2s ease-in-out infinite; }
+  @keyframes starPulse{
+    0%,100%{ opacity: .78; }
+    50%{ opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .bg-star{ animation: none; opacity:.4; }
+    .decor-star{ animation: none; }
+    .decor-enter{ animation: none; }
+  }
+
+  @media (max-width: 420px){
+    .controls{ flex-direction: column; align-items: stretch; }
+    .sky-stat{ justify-content: space-between; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="bg-stars" id="bgStars" aria-hidden="true"></div>
+  <div class="glow glow-a" aria-hidden="true"></div>
+  <div class="glow glow-b" aria-hidden="true"></div>
+
+  <main class="player" role="region" aria-label="Stardust, an interactive space vinyl player">
+    <div class="player-head">
+      <p class="eyebrow">Ambient LP · Side A</p>
+      <h1 class="title">Stardust</h1>
+      <p class="instructions">Drag the stylus onto the record to play. Tap the grooves to place a star or a moon.</p>
+    </div>
+
+    <div class="deck-wrap">
+      <svg class="deck" viewBox="0 0 540 520" role="img" aria-label="A star-mapped vinyl record with a movable tonearm">
+        <defs>
+          <radialGradient id="discGrad" cx="45%" cy="40%" r="70%">
+            <stop offset="0%" stop-color="#1a2140"/>
+            <stop offset="55%" stop-color="#0f1428"/>
+            <stop offset="100%" stop-color="#070a15"/>
+          </radialGradient>
+          <radialGradient id="labelGrad" cx="42%" cy="38%" r="65%">
+            <stop offset="0%" stop-color="#f6dfa0"/>
+            <stop offset="55%" stop-color="#e8c77e"/>
+            <stop offset="100%" stop-color="#b6893f"/>
+          </radialGradient>
+          <linearGradient id="metalGrad" gradientUnits="userSpaceOnUse" x1="0" y1="-16" x2="0" y2="16">
+            <stop offset="0%" stop-color="#f8f1e0"/>
+            <stop offset="45%" stop-color="#d9cba3"/>
+            <stop offset="100%" stop-color="#9c8b63"/>
+          </linearGradient>
+          <radialGradient id="saturnRing" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e8c77e" stop-opacity="0"/>
+            <stop offset="70%" stop-color="#e8c77e" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#e8c77e" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="3" result="b"/>
+            <feMerge>
+              <feMergeNode in="b"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+
+        <!-- static rest peg, drawn once by JS -->
+        <g id="restPeg" aria-hidden="true"></g>
+
+        <!-- rotating record -->
+        <g id="discRotor">
+          <circle id="discHit" cx="225" cy="260" r="205" fill="transparent" style="pointer-events:all; cursor:pointer;"/>
+          <circle cx="225" cy="260" r="205" fill="url(#discGrad)" stroke="rgba(232,199,126,0.25)" stroke-width="1.5" style="pointer-events:none"/>
+
+          <g id="orbitsLayer" style="pointer-events:none"></g>
+          <g id="constellations" style="pointer-events:none"></g>
+          <g id="bgVinylStars" style="pointer-events:none"></g>
+          <g id="planetsLayer" style="pointer-events:none"></g>
+          <g id="decorLayer" style="pointer-events:none"></g>
+
+          <g id="labelGroup" style="pointer-events:none">
+            <circle cx="225" cy="260" r="64" fill="url(#labelGrad)" stroke="#8d6a34" stroke-width="1.5"/>
+            <g id="sunSpikes"></g>
+            <text x="225" y="291" text-anchor="middle" font-family="Space Mono" font-size="8" letter-spacing="2" fill="#6b4f26">ORBIT · 33⅓</text>
+            <circle cx="225" cy="260" r="6.5" fill="#070a15"/>
+          </g>
+        </g>
+
+        <!-- tonearm, fixed pivot, independent rotation -->
+        <g id="tonearm" tabindex="0" role="button" aria-pressed="false" aria-label="Tonearm. Drag onto the record to play, or press Enter to drop and lift the needle.">
+          <path id="armHit" d="" fill="transparent" stroke="transparent" stroke-width="34" style="pointer-events:stroke;"/>
+          <g id="armVisual"></g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="controls">
+      <div class="volume-control">
+        <svg class="icon-speaker" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 9v6h4l5 5V4L8 9H4z" fill="var(--comet-cream)"/>
+          <path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="var(--comet-cream)" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+      </div>
+      <div class="sky-stat">
+        <span><span id="starCount">0</span> charted</span>
+        <button type="button" class="link-btn" id="clearSky">clear sky</button>
+      </div>
+    </div>
+
+    <p class="skyfull-msg" id="skyFullMsg" hidden>The sky's full — <button type="button" id="clearSkyInline">clear it</button> to chart a new one.</p>
+
+    <p class="now-playing" id="nowPlaying" aria-live="polite"></p>
+
+    <p class="credit">Ambient track via <a href="https://youtu.be/LTphVIore3A" target="_blank" rel="noopener">YouTube</a></p>
+  </main>
+</div>
+
+<!-- hidden host for the YouTube audio player; kept off-screen but present
+     (not display:none) so browsers don't suspend it -->
+<div aria-hidden="true" style="position:fixed; left:-9999px; top:-9999px; width:2px; height:2px; overflow:hidden;">
+  <div id="ytHost"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- geometry constants ---------- */
+  var CX = 225, CY = 260, R_OUTER = 205, R_LABEL = 64, R_MIN_PLAY = 74;
+  var PX = 455, PY = 65; // tonearm pivot
+
+  var dx = CX - PX, dy = CY - PY;
+  var PC = Math.hypot(dx, dy);
+  var ARM_LEN = PC - R_LABEL - 10;
+  var theta0 = Math.atan2(dy, dx); // radians, direction pivot -> disc center
+
+  function offsetForRadius(r){
+    var val = (PC*PC + ARM_LEN*ARM_LEN - r*r) / (2*PC*ARM_LEN);
+    val = Math.min(1, Math.max(-1, val));
+    return Math.acos(val);
+  }
+  var offsetOuter = offsetForRadius(R_OUTER);
+  var ANGLE_MIN_PLAY = theta0 - offsetOuter;
+  var ANGLE_MAX_PLAY = theta0 + offsetOuter;
+  var REST_GAP = 15 * Math.PI/180;
+  var ANGLE_REST = ANGLE_MIN_PLAY - REST_GAP;
+  var ANGLE_ABS_MIN = ANGLE_REST;
+  var ANGLE_ABS_MAX = ANGLE_MAX_PLAY;
+
+  function tipAt(angle){
+    return { x: PX + ARM_LEN*Math.cos(angle), y: PY + ARM_LEN*Math.sin(angle) };
+  }
+  function deg(r){ return r*180/Math.PI; }
+
+  /* ---------- svg refs ---------- */
+  var svg = document.querySelector('svg.deck');
+  var tonearm = document.getElementById('tonearm');
+  var armVisual = document.getElementById('armVisual');
+  var armHit = document.getElementById('armHit');
+  var restPegG = document.getElementById('restPeg');
+  var discRotor = document.getElementById('discRotor');
+  var discHit = document.getElementById('discHit');
+  var orbitsLayer = document.getElementById('orbitsLayer');
+  var bgVinylStars = document.getElementById('bgVinylStars');
+  var planetsLayer = document.getElementById('planetsLayer');
+  var decorLayer = document.getElementById('decorLayer');
+  var constellationsLayer = document.getElementById('constellations');
+  var sunSpikes = document.getElementById('sunSpikes');
+
+  var NS = 'http://www.w3.org/2000/svg';
+  function el(name, attrs){
+    var e = document.createElementNS(NS, name);
+    for (var k in attrs){ e.setAttribute(k, attrs[k]); }
+    return e;
+  }
+
+  /* ---------- build tonearm visual ---------- */
+  (function buildTonearm(){
+    var g = armVisual;
+    var armEnd = ARM_LEN - 28;
+
+    /* counterweight, behind the pivot */
+    g.appendChild(el('rect',{x:-34, y:-3, width:24, height:6, rx:3, fill:'url(#metalGrad)'}));
+    g.appendChild(el('circle',{cx:-30, cy:0, r:10, fill:'url(#metalGrad)', stroke:'#070a15', 'stroke-width':1}));
+
+    /* pivot base */
+    g.appendChild(el('circle',{cx:0, cy:0, r:14, class:'pivot-ring', fill:'url(#metalGrad)', stroke:'#070a15', 'stroke-width':2}));
+    g.appendChild(el('circle',{cx:0, cy:0, r:5, fill:'#070a15'}));
+
+    /* arm, with a thin highlight for a metal-rod sheen */
+    g.appendChild(el('line',{x1:13, y1:0, x2:armEnd, y2:0, stroke:'url(#metalGrad)', 'stroke-width':7, 'stroke-linecap':'round'}));
+    g.appendChild(el('line',{x1:13, y1:-1.8, x2:armEnd, y2:-1.8, stroke:'rgba(255,255,255,0.4)', 'stroke-width':1.1, 'stroke-linecap':'round'}));
+
+    /* headshell / cartridge housing, warm bronze so it reads against the dark disc */
+    var hs = 'M ' + (armEnd-6) + ',-10 L ' + (ARM_LEN-2) + ',-6 L ' + (ARM_LEN+8) + ',3 L ' + (armEnd-10) + ',11 Z';
+    g.appendChild(el('path',{d:hs, fill:'var(--star-gold-dim)', stroke:'#070a15', 'stroke-width':1.25}));
+
+    /* stylus tip, with a soft glow */
+    g.appendChild(el('circle',{cx:ARM_LEN+6, cy:3, r:4.6, fill:'#070a15'}));
+    g.appendChild(el('circle',{cx:ARM_LEN+6, cy:3, r:2.7, fill:'var(--star-gold)', filter:'url(#softGlow)'}));
+
+    armHit.setAttribute('d','M -34,0 L ' + (ARM_LEN+8) + ',3');
+  })();
+
+  /* ---------- rest peg (static, drawn at fixed rest tip) ---------- */
+  (function buildRestPeg(){
+    var tip = tipAt(ANGLE_REST);
+    restPegG.appendChild(el('circle',{cx:tip.x, cy:tip.y, r:15, fill:'none', stroke:'rgba(232,199,126,0.35)', 'stroke-width':2}));
+    restPegG.appendChild(el('circle',{cx:tip.x, cy:tip.y, r:4, fill:'rgba(232,199,126,0.5)'}));
+  })();
+
+  /* ---------- orbit rings ---------- */
+  var RING_RADII = [];
+  (function buildOrbits(){
+    var start = R_MIN_PLAY, end = R_OUTER - 8, count = 9;
+    for (var i=0;i<count;i++){
+      var r = start + (end-start) * (i/(count-1));
+      RING_RADII.push(r);
+      orbitsLayer.appendChild(el('circle',{
+        cx:CX, cy:CY, r:r, fill:'none',
+        stroke: (i%3===0) ? 'rgba(232,199,126,0.32)' : 'rgba(243,236,217,0.10)',
+        'stroke-width': (i%3===0) ? 1 : 0.75
+      }));
+    }
+  })();
+
+  /* ---------- planets, placed on specific rings ---------- */
+  (function buildPlanets(){
+    var defs = [
+      { ring:1, angle:40,  r:4,   fill:'var(--comet-cream)' },
+      { ring:2, angle:205, r:5.5, fill:'#d9998c' },
+      { ring:3, angle:300, r:5,   fill:'var(--dust-rose)' },
+      { ring:5, angle:100, r:8,   fill:'var(--star-gold)', ring:true, rx:15, ry:5 },
+      { ring:7, angle:250, r:6.5, fill:'var(--saturn-teal)', ring:true, rx:11, ry:3.5 },
+      { ring:6, angle:15,  r:3.2, fill:'#a9d4cd' }
+    ];
+    defs.forEach(function(p){
+      var radius = RING_RADII[p.ring];
+      var a = p.angle * Math.PI/180;
+      var x = CX + radius*Math.cos(a), y = CY + radius*Math.sin(a);
+      if (p.ring){
+        planetsLayer.appendChild(el('ellipse',{
+          cx:x, cy:y, rx:p.rx, ry:p.ry,
+          fill:'none', stroke: p.fill, 'stroke-width':1.2, opacity:0.6,
+          transform: 'rotate(-18 '+x+' '+y+')'
+        }));
+      }
+      planetsLayer.appendChild(el('circle',{cx:x, cy:y, r:p.r, fill:p.fill, opacity:0.92}));
+    });
+  })();
+
+  /* ---------- scattered background stars on vinyl ---------- */
+  (function buildVinylStars(){
+    for (var i=0;i<34;i++){
+      var r = R_MIN_PLAY + Math.random()*(R_OUTER-8-R_MIN_PLAY);
+      var a = Math.random()*Math.PI*2;
+      var x = CX + r*Math.cos(a), y = CY + r*Math.sin(a);
+      var size = 0.6 + Math.random()*1.1;
+      bgVinylStars.appendChild(el('circle',{cx:x, cy:y, r:size, fill:'var(--comet-cream)', opacity: (0.25+Math.random()*0.45).toFixed(2)}));
+    }
+  })();
+
+  /* ---------- two small fixed constellations ---------- */
+  (function buildConstellations(){
+    var sets = [
+      [[140,150],[160,175],[185,168],[200,185]],
+      [[300,340],[320,320],[345,330],[350,355],[330,368]]
+    ];
+    sets.forEach(function(pts){
+      var d = 'M ' + pts.map(function(p){return p[0]+','+p[1];}).join(' L ');
+      constellationsLayer.appendChild(el('path',{d:d, fill:'none', stroke:'rgba(232,199,126,0.28)', 'stroke-width':0.75}));
+      pts.forEach(function(p){
+        constellationsLayer.appendChild(el('circle',{cx:p[0], cy:p[1], r:1.3, fill:'var(--star-gold)', opacity:0.7}));
+      });
+    });
+  })();
+
+  /* ---------- sun spikes on label ---------- */
+  (function buildSunSpikes(){
+    var count = 22, inner = R_LABEL*0.52, outerLong = R_LABEL*0.93, outerShort = R_LABEL*0.78;
+    for (var i=0;i<count;i++){
+      var a = (i/count) * Math.PI*2;
+      var outer = (i%2===0) ? outerLong : outerShort;
+      var x1 = CX + inner*Math.cos(a), y1 = CY + inner*Math.sin(a);
+      var x2 = CX + outer*Math.cos(a), y2 = CY + outer*Math.sin(a);
+      sunSpikes.appendChild(el('line',{x1:x1,y1:y1,x2:x2,y2:y2, stroke:'#8d6a34', 'stroke-width':0.9, opacity:0.55}));
+    }
+  })();
+
+  /* ---------- background room stars ---------- */
+  (function buildBgStars(){
+    var host = document.getElementById('bgStars');
+    var frag = document.createDocumentFragment();
+    for (var i=0;i<110;i++){
+      var s = document.createElement('div');
+      s.className = 'bg-star';
+      var size = (Math.random()*1.8+0.6).toFixed(2);
+      s.style.width = size+'px';
+      s.style.height = size+'px';
+      s.style.left = (Math.random()*100)+'%';
+      s.style.top = (Math.random()*100)+'%';
+      s.style.animationDelay = (Math.random()*4.5).toFixed(2)+'s';
+      s.style.animationDuration = (3.5+Math.random()*3).toFixed(2)+'s';
+      frag.appendChild(s);
+    }
+    host.appendChild(frag);
+  })();
+
+  /* ---------- coordinate helpers ---------- */
+  function toSvgPoint(clientX, clientY){
+    var pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    var m = svg.getScreenCTM();
+    if (!m) return {x:0,y:0};
+    var p = pt.matrixTransform(m.inverse());
+    return { x:p.x, y:p.y };
+  }
+  function rotateAround(px, py, cx, cy, angleRad){
+    var s = Math.sin(angleRad), c = Math.cos(angleRad);
+    var x = px-cx, y = py-cy;
+    return { x: cx + x*c - y*s, y: cy + x*s + y*c };
+  }
+
+  /* ---------- rotation loop ---------- */
+  var currentAngleDeg = 0;
+  var isSpinning = false;
+  var lastT = null;
+  var DEG_PER_SEC = 36; // slow, calming spin (10s per rotation)
+
+  function frame(t){
+    if (lastT === null) lastT = t;
+    var dt = (t - lastT)/1000;
+    lastT = t;
+    if (isSpinning){
+      currentAngleDeg = (currentAngleDeg + DEG_PER_SEC*dt) % 360;
+      discRotor.setAttribute('transform', 'rotate(' + currentAngleDeg + ' ' + CX + ' ' + CY + ')');
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion){ DEG_PER_SEC = 14; }
+
+  /* ---------- tonearm drag ---------- */
+  var currentAngle = ANGLE_REST;
+  var dragging = false;
+
+  function applyTonearmAngle(a, animated){
+    currentAngle = a;
+    tonearm.style.transition = animated ? 'transform .45s cubic-bezier(.2,.8,.3,1)' : 'none';
+    tonearm.setAttribute('transform', 'translate(' + PX + ' ' + PY + ') rotate(' + deg(a) + ')');
+  }
+  applyTonearmAngle(ANGLE_REST, false);
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  function isOnRecord(a){
+    return a >= ANGLE_MIN_PLAY - 0.001 && a <= ANGLE_MAX_PLAY + 0.001;
+  }
+
+  tonearm.addEventListener('pointerdown', function(e){
+    dragging = true;
+    tonearm.style.transition = 'none';
+    try{ tonearm.setPointerCapture(e.pointerId); }catch(err){}
+    ensureAudioUnlocked();
+  });
+  tonearm.addEventListener('pointermove', function(e){
+    if (!dragging) return;
+    var p = toSvgPoint(e.clientX, e.clientY);
+    var a = Math.atan2(p.y-PY, p.x-PX);
+    a = clamp(a, ANGLE_ABS_MIN, ANGLE_ABS_MAX);
+    applyTonearmAngle(a, false);
+  });
+  function endDrag(e){
+    if (!dragging) return;
+    dragging = false;
+    if (isOnRecord(currentAngle)){
+      dropNeedle();
+    } else {
+      liftNeedle();
+    }
+  }
+  tonearm.addEventListener('pointerup', endDrag);
+  tonearm.addEventListener('pointercancel', endDrag);
+
+  tonearm.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' '){
+      e.preventDefault();
+      if (isPlaying){ liftNeedle(); } else { dropNeedle(); }
+    }
+  });
+
+  var isPlaying = false;
+  var nowPlayingEl = document.getElementById('nowPlaying');
+
+  function dropNeedle(){
+    var target = isOnRecord(currentAngle) ? currentAngle : (ANGLE_MIN_PLAY + ANGLE_MAX_PLAY)/2;
+    applyTonearmAngle(target, true);
+    tonearm.setAttribute('aria-pressed','true');
+    isPlaying = true;
+    isSpinning = true;
+    nowPlayingEl.textContent = 'now playing';
+    nowPlayingEl.classList.add('on');
+    startAudio();
+  }
+  function liftNeedle(){
+    applyTonearmAngle(ANGLE_REST, true);
+    tonearm.setAttribute('aria-pressed','false');
+    isPlaying = false;
+    isSpinning = false;
+    nowPlayingEl.textContent = 'paused';
+    nowPlayingEl.classList.remove('on');
+    stopAudio();
+  }
+
+  /* ---------- click on vinyl to add star / moon ---------- */
+  var MAX_DECOR = 44;
+  var decorations = [];
+  var starCountEl = document.getElementById('starCount');
+  var skyFullMsg = document.getElementById('skyFullMsg');
+
+  function makeStarPath(){
+    return 'M0,-9 L2.2,-2.2 L9,0 L2.2,2.2 L0,9 L-2.2,2.2 L-9,0 L-2.2,-2.2 Z';
+  }
+  function makeMoonPath(){
+    return 'M6.5,-7 A7,7 0 1 0 6.5,7 A5.2,7 0 1 1 6.5,-7 Z';
+  }
+
+  function addDecoration(svgX, svgY){
+    if (decorations.length >= MAX_DECOR){
+      skyFullMsg.hidden = false;
+      return;
+    }
+    var local = rotateAround(svgX, svgY, CX, CY, -currentAngleDeg*Math.PI/180);
+    var type = Math.random() < 0.72 ? 'star' : 'moon';
+    var scale = (0.75 + Math.random()*0.55).toFixed(2);
+    var rot = Math.floor(Math.random()*360);
+    var color = type === 'star'
+      ? (Math.random()<0.5 ? 'var(--comet-cream)' : 'var(--star-gold)')
+      : 'var(--comet-cream)';
+
+    /* three-level structure keeps the CSS entrance animation (which
+       drives the transform of `pop`) from fighting with the static
+       placement transform (translate+rotate) on `placer`. */
+    var placer = el('g', {
+      transform: 'translate(' + local.x.toFixed(2) + ' ' + local.y.toFixed(2) + ') rotate(' + rot + ')'
+    });
+    var pop = el('g', { class: 'decor-enter', style: '--s:' + scale });
+    var shape = el('path', {
+      d: type === 'star' ? makeStarPath() : makeMoonPath(),
+      fill: color,
+      opacity: type === 'star' ? 0.95 : 0.9,
+      class: type === 'star' ? 'decor-star' : ''
+    });
+    pop.appendChild(shape);
+    placer.appendChild(pop);
+    decorLayer.appendChild(placer);
+
+    decorations.push({x:local.x, y:local.y});
+    starCountEl.textContent = decorations.length;
+    if (decorations.length >= MAX_DECOR){ skyFullMsg.hidden = false; }
+  }
+
+  discHit.addEventListener('click', function(e){
+    var p = toSvgPoint(e.clientX, e.clientY);
+    var d = Math.hypot(p.x-CX, p.y-CY);
+    if (d < R_LABEL + 6 || d > R_OUTER - 2) return;
+    addDecoration(p.x, p.y);
+  });
+
+  function clearSky(){
+    decorations = [];
+    decorLayer.innerHTML = '';
+    starCountEl.textContent = '0';
+    skyFullMsg.hidden = true;
+  }
+  document.getElementById('clearSky').addEventListener('click', clearSky);
+  document.getElementById('clearSkyInline').addEventListener('click', clearSky);
+
+  /* ---------- audio: YouTube track with a guaranteed synth fallback ---------- */
+  var YT_VIDEO_ID = 'LTphVIore3A';
+  var ytPlayer = null;
+  var ytReady = false;
+  var usingFallback = false;
+  var currentVolume = parseFloat(document.getElementById('volume').value);
+
+  function loadYouTube(){
+    var failSafe = setTimeout(function(){
+      if (!ytReady) armSynthFallback();
+    }, 4500);
+
+    window.onYouTubeIframeAPIReady = function(){
+      try{
+        ytPlayer = new YT.Player('ytHost', {
+          height: '2', width: '2', videoId: YT_VIDEO_ID,
+          playerVars: {
+            autoplay: 0, controls: 0, disablekb: 1, modestbranding: 1,
+            playsinline: 1, loop: 1, playlist: YT_VIDEO_ID
+          },
+          events: {
+            onReady: function(){
+              clearTimeout(failSafe);
+              ytReady = true;
+              ytPlayer.setVolume(Math.round(currentVolume*100));
+              if (isPlaying) startAudio();
+            },
+            onError: function(){ armSynthFallback(); if (isPlaying) playSynth(); },
+            onStateChange: function(ev){
+              if (ev.data === YT.PlayerState.ENDED) ytPlayer.playVideo();
+            }
+          }
+        });
+      }catch(err){ armSynthFallback(); }
+    };
+
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    tag.onerror = function(){ clearTimeout(failSafe); armSynthFallback(); };
+    document.head.appendChild(tag);
+  }
+  loadYouTube();
+
+  function checkYtPlaying(){
+    if (!isPlaying || usingFallback || !ytPlayer || !ytPlayer.getPlayerState) return;
+    var state = ytPlayer.getPlayerState();
+    if (state === 3){ setTimeout(checkYtPlaying, 1200); } // still buffering
+    else if (state !== 1){ armSynthFallback(); playSynth(); } // not actually playing
+  }
+
+  /* Web Audio ambient pad fallback (fully original, generated) */
+  var actx, masterGain, synthStarted = false;
+  function ensureAudioUnlocked(){
+    if (!actx){
+      try{
+        actx = new (window.AudioContext || window.webkitAudioContext)();
+      }catch(e){ return; }
+    }
+    if (actx.state === 'suspended'){ actx.resume(); }
+  }
+  function armSynthFallback(){
+    usingFallback = true;
+    ensureAudioUnlocked();
+    if (!actx || synthStarted) return;
+    synthStarted = true;
+    masterGain = actx.createGain();
+    masterGain.gain.value = 0;
+    masterGain.connect(actx.destination);
+    var freqs = [130.81, 164.81, 196.00, 246.94, 329.63];
+    freqs.forEach(function(f, i){
+      var osc = actx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      var g = actx.createGain();
+      g.gain.value = 0.13;
+      var lfo = actx.createOscillator();
+      lfo.frequency.value = 0.04 + i*0.015;
+      var lfoGain = actx.createGain();
+      lfoGain.gain.value = 0.05;
+      lfo.connect(lfoGain);
+      lfoGain.connect(g.gain);
+      var filter = actx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 900;
+      osc.connect(filter);
+      filter.connect(g);
+      g.connect(masterGain);
+      osc.start();
+      lfo.start();
+    });
+  }
+  function playSynth(){
+    ensureAudioUnlocked();
+    if (masterGain){
+      masterGain.gain.cancelScheduledValues(actx.currentTime);
+      masterGain.gain.setTargetAtTime(currentVolume, actx.currentTime, 0.6);
+    }
+  }
+  function pauseSynth(){
+    if (masterGain){
+      masterGain.gain.cancelScheduledValues(actx.currentTime);
+      masterGain.gain.setTargetAtTime(0, actx.currentTime, 0.5);
+    }
+  }
+
+  function startAudio(){
+    ensureAudioUnlocked();
+    if (usingFallback){ playSynth(); return; }
+    if (ytReady && ytPlayer){
+      try{
+        ytPlayer.setVolume(Math.round(currentVolume*100));
+        ytPlayer.playVideo();
+        setTimeout(checkYtPlaying, 1200);
+      }catch(e){ armSynthFallback(); playSynth(); }
+    }
+    /* if the API isn't ready yet, onReady() re-calls startAudio() once it is */
+  }
+  function stopAudio(){
+    if (usingFallback){ pauseSynth(); return; }
+    if (ytReady && ytPlayer && ytPlayer.pauseVideo){ ytPlayer.pauseVideo(); }
+  }
+
+  document.getElementById('volume').addEventListener('input', function(e){
+    currentVolume = parseFloat(e.target.value);
+    e.target.style.setProperty('--fill', (currentVolume*100)+'%');
+    if (usingFallback && masterGain && isPlaying){
+      masterGain.gain.setTargetAtTime(currentVolume, actx.currentTime, 0.1);
+    } else if (ytReady && ytPlayer){
+      ytPlayer.setVolume(Math.round(currentVolume*100));
+    }
+  });
+  document.getElementById('volume').style.setProperty('--fill', (currentVolume*100)+'%');
+
+})();
+</script>
+</body>
+</html>
