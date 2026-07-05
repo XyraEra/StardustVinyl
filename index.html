@@ -123,7 +123,7 @@
 
 position: relative;
 z-index:1;
-width:min(94vw, 560px);
+width:min(94vw, 760px);
 background: transparent;
 border: none;
 border-radius: 0;
@@ -134,12 +134,12 @@ backdrop-filter: none;
 
   .player-head{
     text-align:center;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
   }
   .title{
     font-family: 'Cormorant Garamond', serif;
     font-weight: 700;
-    font-size: clamp(34px, 7vw, 48px);
+    font-size: clamp(38px, 7vw, 62px);
     letter-spacing: 0.14em;
     text-transform: uppercase;
     margin: 0;
@@ -152,7 +152,7 @@ backdrop-filter: none;
     text-shadow: 0 0 34px rgba(232,199,126,0.28);
   }
   .instructions{
-    margin: 22px auto 0;
+    margin: 14px auto 0;
     max-width: 380px;
     font-size: 12px;
     line-height: 1.6;
@@ -165,12 +165,12 @@ backdrop-filter: none;
     align-items:center;
     justify-content:center;
     gap: clamp(10px, 3vw, 30px);
-    margin: 18px auto 8px;
+    margin: 8px auto 4px;
   }
   .deck-wrap{
     position:relative;
     margin: 0;
-    width: min(70vw, 440px);
+    width: min(58vw, 560px);
     flex: 0 1 auto;
   }
   svg.deck{
@@ -196,19 +196,28 @@ backdrop-filter: none;
     display:flex;
     flex-direction:column;
     align-items:center;
-    justify-content:center;
-    gap:14px;
+    gap:12px;
     width:44px;
-    height:200px;
+    height:240px;
     flex:0 0 auto;
   }
   .icon-speaker{ flex:0 0 auto; opacity:.75; }
+
+  .volume-track{
+    position:relative;
+    width:24px;
+    height:190px;
+    flex:1 1 auto;
+  }
 
 input[type="range"]{
     -webkit-appearance:none;
     appearance:none;
 
-    width:150px;
+    position:absolute;
+    top:50%;
+    left:50%;
+    width:190px;
     height:4px;
 
     border-radius:2px;
@@ -223,7 +232,7 @@ input[type="range"]{
 
     outline:none;
 
-    transform: rotate(-90deg);
+    transform: translate(-50%,-50%) rotate(-90deg);
 }
 
 input[type="range"]::-webkit-slider-thumb{
@@ -293,11 +302,30 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
   .link-btn:focus-visible{ outline: 2px solid var(--star-gold); outline-offset: 2px; border-radius:3px; }
 
   .skyfull-msg{
-    margin: 12px 0 0;
+    position: fixed;
+    left: 50%;
+    bottom: 34px;
+    transform: translateX(-50%) translateY(12px);
+    margin: 0;
+    background: rgba(20,27,53,0.94);
+    border: 1px solid rgba(232,199,126,0.25);
+    padding: 10px 20px;
+    border-radius: 999px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
     text-align:center;
     font-size: 11.5px;
     color: var(--dust-rose);
     letter-spacing: 0.02em;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .35s ease, transform .35s ease;
+    z-index: 6;
+  }
+  .skyfull-msg.show{
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
   }
   .skyfull-msg button{
     background:none; border:none; padding:0; margin:0;
@@ -377,8 +405,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
 
   @media (max-width: 480px){
     .deck-row{ flex-direction: column; gap: 14px; }
-    .volume-control{ flex-direction: row; width: auto; height: 44px; }
-    .volume-control input[type="range"]{ transform: none; }
+    .volume-control{ flex-direction: row; width: auto; height: 44px; gap: 10px; }
+    .volume-track{ width: 150px; height: 24px; }
+    .volume-control input[type="range"]{ width: 150px; transform: translate(-50%,-50%); }
     .sky-stat{ flex-direction: row; width: auto; gap: 14px; }
   }
 
@@ -406,7 +435,9 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
             <path d="M4 9v6h4l5 5V4L8 9H4z" fill="var(--comet-cream)"/>
             <path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="var(--comet-cream)" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          <input type="range" id="volume" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+          <div class="volume-track">
+            <input type="range" id="volume" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+          </div>
         </div>
       </div>
 
@@ -477,7 +508,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
       </div>
     </div>
 
-    <p class="skyfull-msg" id="skyFullMsg" hidden>The sky's full — <button type="button" id="clearSkyInline">clear it</button> to chart a new one.</p>
+    <p class="skyfull-msg" id="skyFullMsg" role="status" aria-live="polite">The sky's full — <button type="button" id="clearSkyInline">clear it</button> to chart a new one.</p>
 
     <p class="now-playing" id="nowPlaying" aria-live="polite"></p>
 
@@ -823,6 +854,15 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
   var decorations = [];
   var starCountEl = document.getElementById('starCount');
   var skyFullMsg = document.getElementById('skyFullMsg');
+  var skyFullTimer = null;
+
+  function showSkyFull(){
+    skyFullMsg.classList.add('show');
+    clearTimeout(skyFullTimer);
+    skyFullTimer = setTimeout(function(){
+      skyFullMsg.classList.remove('show');
+    }, 4000);
+  }
 
   function makeStarPath(){
     return 'M0,-9 L2.2,-2.2 L9,0 L2.2,2.2 L0,9 L-2.2,2.2 L-9,0 L-2.2,-2.2 Z';
@@ -833,7 +873,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
 
   function addDecoration(svgX, svgY){
     if (decorations.length >= MAX_DECOR){
-      skyFullMsg.hidden = false;
+      showSkyFull();
       return;
     }
     var local = rotateAround(svgX, svgY, CX, CY, -currentAngleDeg*Math.PI/180);
@@ -863,7 +903,7 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
 
     decorations.push({x:local.x, y:local.y});
     starCountEl.textContent = decorations.length;
-    if (decorations.length >= MAX_DECOR){ skyFullMsg.hidden = false; }
+    if (decorations.length >= MAX_DECOR){ showSkyFull(); }
   }
 
   discHit.addEventListener('click', function(e){
@@ -877,7 +917,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
     decorations = [];
     decorLayer.innerHTML = '';
     starCountEl.textContent = '0';
-    skyFullMsg.hidden = true;
+    clearTimeout(skyFullTimer);
+    skyFullMsg.classList.remove('show');
   }
   document.getElementById('clearSky').addEventListener('click', clearSky);
   document.getElementById('clearSkyInline').addEventListener('click', clearSky);
