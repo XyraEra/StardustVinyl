@@ -136,34 +136,42 @@ backdrop-filter: none;
     text-align:center;
     margin-bottom: 6px;
   }
-  .eyebrow{
-    margin:0 0 6px;
-    font-size: 11px;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    color: var(--star-gold-dim);
-  }
   .title{
     font-family: 'Cormorant Garamond', serif;
-    font-weight: 600;
-    font-size: clamp(34px, 7vw, 46px);
-    letter-spacing: 0.03em;
-    margin: 0 0 8px;
-    color: var(--comet-cream);
-    text-shadow: 0 0 30px rgba(232,199,126,0.18);
+    font-weight: 700;
+    font-size: clamp(34px, 7vw, 48px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin: 0;
+    text-align: center;
+    background: linear-gradient(135deg, #f8e6b0 0%, #e8c77e 45%, #a9854f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 34px rgba(232,199,126,0.28);
   }
   .instructions{
-    margin: 0 auto;
+    margin: 22px auto 0;
     max-width: 380px;
     font-size: 12px;
     line-height: 1.6;
+    text-align: center;
     color: var(--ink-muted);
   }
 
+  .deck-row{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap: clamp(10px, 3vw, 30px);
+    margin: 18px auto 8px;
+  }
   .deck-wrap{
     position:relative;
-    margin: 18px auto 8px;
-    width: 100%;
+    margin: 0;
+    width: min(70vw, 440px);
+    flex: 0 1 auto;
   }
   svg.deck{
     display:block;
@@ -181,22 +189,18 @@ backdrop-filter: none;
   }
 
   .controls{
-    position:absolute;
-    left:-135px;
-    top:160px;
-
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:22px;
-}
+    display:contents;
+  }
 
   .volume-control{
     display:flex;
+    flex-direction:column;
     align-items:center;
-    gap: 10px;
-    flex: 1 1 200px;
-    min-width: 160px;
+    justify-content:center;
+    gap:14px;
+    width:44px;
+    height:200px;
+    flex:0 0 auto;
   }
   .icon-speaker{ flex:0 0 auto; opacity:.75; }
 
@@ -204,7 +208,7 @@ input[type="range"]{
     -webkit-appearance:none;
     appearance:none;
 
-    width:170px;
+    width:150px;
     height:4px;
 
     border-radius:2px;
@@ -258,19 +262,13 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
     box-shadow:var(--ring);
 }
 
-.volume-control{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    width:40px;
-    height:190px;
-}
-
 .sky-stat{
     display:flex;
     flex-direction:column;
     align-items:center;
     justify-content:center;
+    width:70px;
+    flex:0 0 auto;
 
     font-size:11.5px;
     color:var(--ink-muted);
@@ -344,15 +342,48 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
     50%{ opacity: 1; }
   }
 
+  .shooting-star{
+    position:absolute;
+    width:2px;
+    height:2px;
+    border-radius:50%;
+    background: var(--comet-cream);
+    box-shadow: 0 0 6px 1px rgba(243,236,217,0.85);
+    opacity:0;
+    pointer-events:none;
+    z-index:0;
+  }
+  .shooting-star::before{
+    content:"";
+    position:absolute;
+    top:50%; right:0;
+    width:90px;
+    height:1px;
+    background: linear-gradient(90deg, transparent, rgba(243,236,217,0.7));
+    transform: translateY(-50%);
+  }
+  @keyframes shoot{
+    0%{ opacity:0; transform: rotate(var(--ang)) translateX(0); }
+    6%{ opacity:1; }
+    75%{ opacity:1; }
+    100%{ opacity:0; transform: rotate(var(--ang)) translateX(var(--dist)); }
+  }
+
   @media (prefers-reduced-motion: reduce){
     .bg-star{ animation: none; opacity:.4; }
     .decor-star{ animation: none; }
     .decor-enter{ animation: none; }
   }
 
+  @media (max-width: 480px){
+    .deck-row{ flex-direction: column; gap: 14px; }
+    .volume-control{ flex-direction: row; width: auto; height: 44px; }
+    .volume-control input[type="range"]{ transform: none; }
+    .sky-stat{ flex-direction: row; width: auto; gap: 14px; }
+  }
+
   @media (max-width: 420px){
-    .controls{ flex-direction: column; align-items: stretch; }
-    .sky-stat{ justify-content: space-between; }
+    .sky-stat{ justify-content: center; }
   }
 </style>
 </head>
@@ -365,81 +396,81 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
 
   <main class="player" role="region" aria-label="Stardust, an interactive space vinyl player">
     <div class="player-head">
-      <p class="eyebrow">Ambient LP · Side A</p>
       <h1 class="title">Stardust</h1>
-      <p class="instructions">Drag the stylus onto the record to play. Tap the grooves to place a star or a moon.</p>
     </div>
 
-    <div class="deck-wrap">
-      <svg class="deck" viewBox="0 0 540 520" role="img" aria-label="A star-mapped vinyl record with a movable tonearm">
-        <defs>
-          <radialGradient id="discGrad" cx="45%" cy="40%" r="70%">
-            <stop offset="0%" stop-color="#1a2140"/>
-            <stop offset="55%" stop-color="#0f1428"/>
-            <stop offset="100%" stop-color="#070a15"/>
-          </radialGradient>
-          <radialGradient id="labelGrad" cx="42%" cy="38%" r="65%">
-            <stop offset="0%" stop-color="#f6dfa0"/>
-            <stop offset="55%" stop-color="#e8c77e"/>
-            <stop offset="100%" stop-color="#b6893f"/>
-          </radialGradient>
-          <linearGradient id="metalGrad" gradientUnits="userSpaceOnUse" x1="0" y1="-16" x2="0" y2="16">
-            <stop offset="0%" stop-color="#f8f1e0"/>
-            <stop offset="45%" stop-color="#d9cba3"/>
-            <stop offset="100%" stop-color="#9c8b63"/>
-          </linearGradient>
-          <radialGradient id="saturnRing" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#e8c77e" stop-opacity="0"/>
-            <stop offset="70%" stop-color="#e8c77e" stop-opacity=".55"/>
-            <stop offset="100%" stop-color="#e8c77e" stop-opacity="0"/>
-          </radialGradient>
-          <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="3" result="b"/>
-            <feMerge>
-              <feMergeNode in="b"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-
-        <!-- static rest peg, drawn once by JS -->
-        <g id="restPeg" aria-hidden="true"></g>
-
-        <!-- rotating record -->
-        <g id="discRotor">
-          <circle id="discHit" cx="225" cy="260" r="205" fill="transparent" style="pointer-events:all; cursor:pointer;"/>
-          <circle cx="225" cy="260" r="205" fill="url(#discGrad)" stroke="rgba(232,199,126,0.25)" stroke-width="1.5" style="pointer-events:none"/>
-
-          <g id="orbitsLayer" style="pointer-events:none"></g>
-          <g id="constellations" style="pointer-events:none"></g>
-          <g id="bgVinylStars" style="pointer-events:none"></g>
-          <g id="planetsLayer" style="pointer-events:none"></g>
-          <g id="decorLayer" style="pointer-events:none"></g>
-
-          <g id="labelGroup" style="pointer-events:none">
-            <circle cx="225" cy="260" r="64" fill="url(#labelGrad)" stroke="#8d6a34" stroke-width="1.5"/>
-            <g id="sunSpikes"></g>
-            <text x="225" y="291" text-anchor="middle" font-family="Space Mono" font-size="8" letter-spacing="2" fill="#6b4f26">ORBIT · 33⅓</text>
-            <circle cx="225" cy="260" r="6.5" fill="#070a15"/>
-          </g>
-        </g>
-
-        <!-- tonearm, fixed pivot, independent rotation -->
-        <g id="tonearm" tabindex="0" role="button" aria-pressed="false" aria-label="Tonearm. Drag onto the record to play, or press Enter to drop and lift the needle.">
-          <path id="armHit" d="" fill="transparent" stroke="transparent" stroke-width="34" style="pointer-events:stroke;"/>
-          <g id="armVisual"></g>
-        </g>
-      </svg>
-    </div>
-
-    <div class="controls">
-      <div class="volume-control">
-        <svg class="icon-speaker" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M4 9v6h4l5 5V4L8 9H4z" fill="var(--comet-cream)"/>
-          <path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="var(--comet-cream)" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
-        <input type="range" id="volume" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+    <div class="deck-row">
+      <div class="controls">
+        <div class="volume-control">
+          <svg class="icon-speaker" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9v6h4l5 5V4L8 9H4z" fill="var(--comet-cream)"/>
+            <path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="var(--comet-cream)" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <input type="range" id="volume" min="0" max="1" step="0.01" value="0.6" aria-label="Volume" />
+        </div>
       </div>
+
+      <div class="deck-wrap">
+        <svg class="deck" viewBox="0 0 540 520" role="img" aria-label="A star-mapped vinyl record with a movable tonearm">
+          <defs>
+            <radialGradient id="discGrad" cx="45%" cy="40%" r="70%">
+              <stop offset="0%" stop-color="#1a2140"/>
+              <stop offset="55%" stop-color="#0f1428"/>
+              <stop offset="100%" stop-color="#070a15"/>
+            </radialGradient>
+            <radialGradient id="labelGrad" cx="42%" cy="38%" r="65%">
+              <stop offset="0%" stop-color="#f6dfa0"/>
+              <stop offset="55%" stop-color="#e8c77e"/>
+              <stop offset="100%" stop-color="#b6893f"/>
+            </radialGradient>
+            <linearGradient id="metalGrad" gradientUnits="userSpaceOnUse" x1="0" y1="-16" x2="0" y2="16">
+              <stop offset="0%" stop-color="#f8f1e0"/>
+              <stop offset="45%" stop-color="#d9cba3"/>
+              <stop offset="100%" stop-color="#9c8b63"/>
+            </linearGradient>
+            <radialGradient id="saturnRing" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="#e8c77e" stop-opacity="0"/>
+              <stop offset="70%" stop-color="#e8c77e" stop-opacity=".55"/>
+              <stop offset="100%" stop-color="#e8c77e" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="3" result="b"/>
+              <feMerge>
+                <feMergeNode in="b"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          <!-- static rest peg, drawn once by JS -->
+          <g id="restPeg" aria-hidden="true"></g>
+
+          <!-- rotating record -->
+          <g id="discRotor">
+            <circle id="discHit" cx="225" cy="260" r="205" fill="transparent" style="pointer-events:all; cursor:pointer;"/>
+            <circle cx="225" cy="260" r="205" fill="url(#discGrad)" stroke="rgba(232,199,126,0.25)" stroke-width="1.5" style="pointer-events:none"/>
+
+            <g id="orbitsLayer" style="pointer-events:none"></g>
+            <g id="constellations" style="pointer-events:none"></g>
+            <g id="bgVinylStars" style="pointer-events:none"></g>
+            <g id="planetsLayer" style="pointer-events:none"></g>
+            <g id="decorLayer" style="pointer-events:none"></g>
+
+            <g id="labelGroup" style="pointer-events:none">
+              <circle cx="225" cy="260" r="64" fill="url(#labelGrad)" stroke="#8d6a34" stroke-width="1.5"/>
+              <g id="sunSpikes"></g>
+              <circle cx="225" cy="260" r="6.5" fill="#070a15"/>
+            </g>
+          </g>
+
+          <!-- tonearm, fixed pivot, independent rotation -->
+          <g id="tonearm" tabindex="0" role="button" aria-pressed="false" aria-label="Tonearm. Drag onto the record to play, or press Enter to drop and lift the needle.">
+            <path id="armHit" d="" fill="transparent" stroke="transparent" stroke-width="34" style="pointer-events:stroke;"/>
+            <g id="armVisual"></g>
+          </g>
+        </svg>
+      </div>
+
       <div class="sky-stat">
         <span><span id="starCount">0</span> charted</span>
         <button type="button" class="link-btn" id="clearSky">clear sky</button>
@@ -449,6 +480,8 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
     <p class="skyfull-msg" id="skyFullMsg" hidden>The sky's full — <button type="button" id="clearSkyInline">clear it</button> to chart a new one.</p>
 
     <p class="now-playing" id="nowPlaying" aria-live="polite"></p>
+
+    <p class="instructions">Drag the stylus onto the record to play. Tap the grooves to place a star or a moon.</p>
 
     <p class="credit">Ambient track via <a href="https://youtu.be/LTphVIore3A" target="_blank" rel="noopener">YouTube</a></p>
   </main>
@@ -643,6 +676,38 @@ input[type="range"]:focus-visible::-webkit-slider-thumb{
       frag.appendChild(s);
     }
     host.appendChild(frag);
+  })();
+
+  /* ---------- occasional shooting stars ---------- */
+  (function shootingStars(){
+    var host = document.getElementById('bgStars');
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) return;
+
+    function spawn(){
+      var star = document.createElement('div');
+      star.className = 'shooting-star';
+      var startX = Math.random()*70;
+      var startY = Math.random()*45;
+      var angle = 20 + Math.random()*25;
+      var dist = 220 + Math.random()*220;
+      var duration = (0.8 + Math.random()*0.6).toFixed(2);
+
+      star.style.left = startX+'%';
+      star.style.top = startY+'%';
+      star.style.setProperty('--ang', angle.toFixed(1)+'deg');
+      star.style.setProperty('--dist', dist.toFixed(0)+'px');
+      star.style.animation = 'shoot ' + duration + 's linear forwards';
+
+      host.appendChild(star);
+      star.addEventListener('animationend', function(){ star.remove(); });
+      schedule();
+    }
+    function schedule(){
+      var delay = 3500 + Math.random()*7000;
+      setTimeout(spawn, delay);
+    }
+    schedule();
   })();
 
   /* ---------- coordinate helpers ---------- */
